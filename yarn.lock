@@ -2305,10 +2305,10 @@ aws-cdk-lib@^2.139.0:
     table "^6.9.0"
     yaml "1.10.2"
 
-aws-cdk-local@^2.19.0:
-  version "2.19.2"
-  resolved "https://registry.yarnpkg.com/aws-cdk-local/-/aws-cdk-local-2.19.2.tgz#6f2b2af4a4b2df75e7e8354a74673b74acd473ba"
-  integrity sha512-1aT+yD4bN23Zgqjyd7AbLOFTK04xM8L7GBWPdAridqG20cyptnDCmRY7iYwWPx19LnJAA0HaiTxoWQTxDwuFLA==
+aws-cdk-local@^3.0.1:
+  version "3.0.1"
+  resolved "https://registry.yarnpkg.com/aws-cdk-local/-/aws-cdk-local-3.0.1.tgz#246350aec97ccbb7999f2896d7836b65d0c42421"
+  integrity sha512-m5Mre/nbMjwA+9zY4rc5DXzscDDgH2Y9J4/QZ95EFi++IlGHNLXnx7h/16uQoq4sWd3Z/JPjQcLf+p1aulbkpQ==
   dependencies:
     diff "^5.0.0"
 
