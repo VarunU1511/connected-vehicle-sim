@@ -1,0 +1,26 @@
+{
+    "name": "connected-vehicle-sim",
+    "version": "1.0.0",
+    "private": true,
+    "workspaces": [
+        "simulation",
+        "services/*",
+        "infra",
+        "dashboard"
+    ],
+    "scripts": {
+        "start:producer": "ts-node simulation/producer.ts",
+        "docker:up": "docker compose up -d",
+        "docker:down": "docker compose down",
+        "local:infra": "ts-node infra/setup-local.ts"
+    },
+    "dependencies": {
+        "dotenv": "^16.4.5",
+        "kafkajs": "^2.2.4"
+    },
+    "devDependencies": {
+        "@types/node": "^20.12.7",
+        "ts-node": "^10.9.2",
+        "typescript": "^5.4.5"
+    }
+}

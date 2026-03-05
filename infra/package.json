@@ -1,0 +1,20 @@
+{
+    "name": "infra",
+    "version": "1.0.0",
+    "private": true,
+    "scripts": {
+        "local:bootstrap": "cdklocal bootstrap",
+        "local:deploy": "cdklocal deploy --all --require-approval never"
+    },
+    "devDependencies": {
+        "aws-cdk": "^2.139.0",
+        "aws-cdk-local": "^2.19.0",
+        "ts-node": "^10.9.1",
+        "typescript": "^5.4.5"
+    },
+    "dependencies": {
+        "aws-cdk-lib": "^2.139.0",
+        "constructs": "^10.3.0",
+        "source-map-support": "^0.5.21"
+    }
+}
