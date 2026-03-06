@@ -6,8 +6,9 @@ A high-fidelity simulation of an event-driven SOA microservice that simulates 10
 - `dashboard/`: A Next.js (App Router) real-time dashboard styled with Tailwind CSS and Framer Motion that polls LocalStack to visualize the 100 vehicles live.
 - `simulation/`: The Vehicle Car Simulator. Produces realistic mock GPS, Battery, and Speed values and reliably pushes them into the Kafka broker.
 - `infra/`: AWS CDK + Native SDK Scripts. Includes `setup-local.ts` to instantly provision LocalStack DynamoDB and S3 for testing, alongside standard CDK definitions for production deployment.
-- `services/telemetry-processor`: The Consumer Lambda. Retrieves batched messages from Kafka/MSK, handles data transformation, and writes immutable state to DynamoDB and historical logs to S3.
+- `services/telemetry-processor`: The Consumer Lambda. Retrieves batched messages from Kafka/MSK, handles data transformation, and writes immutable state to DynamoDB, updates latest state in **Redis Cache**, and saves historical logs to S3.
 - `shared/`: Shared TypeScript payload types and constants.
+- `redis`: High-performance cache for real-time vehicle state visualization.
 
 ## Running Locally
 

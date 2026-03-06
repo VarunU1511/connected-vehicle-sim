@@ -14,6 +14,7 @@ flowchart TD
     classDef aws fill:#2ecc71,stroke:#27ae60,stroke-width:2px,color:#fff
     classDef ddb fill:#9b59b6,stroke:#8e44ad,stroke-width:2px,color:#fff
     classDef s3 fill:#e74c3c,stroke:#c0392b,stroke-width:2px,color:#fff
+    classDef redis fill:#d82c20,stroke:#a41e16,stroke-width:2px,color:#fff
     classDef ui fill:#f39c12,stroke:#e67e22,stroke-width:2px,color:#fff
     
     subgraph Edge ["🚗 Edge Devices (simulation/)"]
@@ -33,9 +34,10 @@ flowchart TD
         LAMBDA(Telemetry Processor Lambda):::aws
     end
 
-    subgraph Storage ["💾 Data Layer (LocalStack)"]
+    subgraph Storage ["💾 Data Layer (LocalStack & Redis)"]
         DDB[(DynamoDB:<br/>VehicleState Table)]:::ddb
         S3[(Amazon S3:<br/>vehiclelogs Bucket)]:::s3
+        REDIS[(Redis:<br/>vehicles:state Hash)]:::redis
     end
 
     subgraph Client ["💻 Web Dashboard (dashboard/)"]
@@ -52,8 +54,10 @@ flowchart TD
 
     LAMBDA -- "Updates Current State<br/>(Conditional Put)" --> DDB
     LAMBDA -- "Appends Raw Event" --> S3
+    LAMBDA -- "Write-Through Cache<br/>(HSET)" --> REDIS
     
-    NEXTJS -- "Polls every 1s\n(via API Route)" --> DDB
+    NEXTJS -- "Polls every 1s\n(Optimized Cache Read)" --> REDIS
+    REDIS -. "Fallback" .-> DDB
 ```
 
 ---
@@ -78,7 +82,7 @@ connected-vehicle-sim/
 │           ├── handler.ts    # The Lambda Entrypoint (iterates MSK Records)
 │           ├── local-runner.ts# The Bridge translating local Kafka to MSK events
 │           ├── transformer.ts# Business Logic (Out-of-order data handling)
-│           └── repository.ts # The Infrastructure Data Layer (S3 & DynamoDB SDKs)
+│           └── repository.ts # The Infrastructure Data Layer (S3, DynamoDB & Redis)
 ├── dashboard/                # Next.js Web UI
 │   └── src/app/
 │       ├── api/vehicles/route.ts # Backend API reading LocalStack DynamoDB
@@ -121,12 +125,15 @@ sequenceDiagram
         and Write Logs
             Core->>DB: saveToLogs(payload)
             Note over DB: S3 PutObjectCommand appends history
+        and Write Cache
+            Core->>DB: redis.hSet(vin, payload)
+            Note over DB: O(1) Write-Through Cache
         end
     end
     
     Note over NextJS: SetInterval (Every 1s)
     NextJS->>DB: fetch('/api/vehicles')
-    Note over DB: DynamoDB ScanCommand
+    Note over DB: Redis HVALS (Cache Read)
     DB-->>NextJS: JSON Array of 100 States
 ```
 
@@ -149,6 +156,7 @@ Because connected cars frequently go into tunnels (offline), they buffer data lo
 Finally, the sanitized data is persisted via the AWS SDK.
 - **DynamoDB:** `updateVehicleState` uses the `DynamoDBDocumentClient` to execute a `PutCommand`. The `vin` is the Partition Key, meaning the row is overwritten with the latest GPS coordinate and Battery status, giving the system a sub-10 millisecond lookup of where the car is *right now*.
 - **S3:** `saveToLogs` uses the `S3Client` to write the exact payload into the `HistoricalLogsBucket`. It constructs a unique file path based on `logs/{vin}/{timestamp}-{sequenceId}.json` so data scientists can run Amazon Athena queries across the entire history of the fleet.
+- **Redis:** A high-performance hashing layer used as a **Write-Through Cache**. Every state update to DynamoDB is simultaneously mirrored in Redis. The Dashboard API queries Redis directly, avoiding expensive DynamoDB `Scan` operations and reducing costs/latency for real-time visualization.
 
 ---
 
