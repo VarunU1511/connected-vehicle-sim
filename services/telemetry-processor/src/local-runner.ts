@@ -17,7 +17,11 @@ const kafka = new Kafka({
     brokers: KAFKA_BROKERS
 });
 
-const consumer = kafka.consumer({ groupId: 'telemetry-processing-group' });
+const consumer = kafka.consumer({
+    groupId: 'telemetry-processing-group',
+    sessionTimeout: 60000, // Increase session timeout to 60s
+    maxBytesPerPartition: 1024 * 1024 // Limit to 1MB per partition poll to keep batches manageable
+});
 
 const admin = kafka.admin();
 
